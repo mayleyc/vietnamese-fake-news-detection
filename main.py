@@ -59,6 +59,7 @@ optimizer = optim.AdamW(model.parameters(), lr=1e-5)
 
 # List of file paths
 folder_path = 'txt/train'
+
 losses = []
 
 # Define number of folds for cross-validation
@@ -143,28 +144,34 @@ for fold, (train_indices, val_indices) in enumerate(kf.split(os.listdir(folder_p
     avg_val_loss = sum(val_losses) / len(val_losses)
     print(f"Avg Validation Loss for Fold {fold + 1}: {avg_val_loss}")
 
-# Save model checkpoint at the end of all folds
-checkpoint_path = "final_model_checkpoint.pt"
+# Save model checkpoint at the end (approx. 1.5GB)
+'''checkpoint_path = "final_model_checkpoint.pt"
 torch.save({
     'model_state_dict': model.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
     'avg_val_loss': avg_val_loss,
     'train_losses': losses
 }, checkpoint_path)
-print(f"Final model checkpoint saved at {checkpoint_path}")
+print(f"Final model checkpoint saved at {checkpoint_path}")'''
 
-plt.plot(losses, label='training_loss')
+# Plot the losses if needed 
+'''plt.plot(losses, label='training_loss')
 plt.legend()
-plt.show()
+plt.show()''' 
+
 
 # Define a single evaluation text and its label
 # Load model checkpoint
-checkpoint = torch.load(checkpoint_path)
-model.load_state_dict(checkpoint['model_state_dict'])
+'''checkpoint = torch.load(checkpoint_path)
+model.load_state_dict(checkpoint['model_state_dict'])'''
+
+#Set model to evaluation state
 model.eval()
+
 def evaluate(dir):
   with open(dir, 'r') as f:
       evaluation_text = f.read()
+      #Read the label from the filename
       evaluation_label = 1 if "fake" in dir.lower() else 0
 
   # Tokenize and encode the evaluation text
@@ -173,23 +180,20 @@ def evaluate(dir):
   # Convert the label to a tensor
   evaluation_label_tensor = torch.tensor([evaluation_label]).to(device)
 
-
   # Forward pass
   with torch.no_grad():
       outputs = model(**evaluation_encoding)
       pooled_output = outputs.pooler_output  # Pooled output from the [CLS] token
       logits = model.classification_head(pooled_output)
 
-  # Predictions
+  # Generate predictions
   prediction = torch.argmax(logits, dim=1).item()
 
-
-  # Compute accuracy: True/False value
+  # Compute accuracy: if prediction aligns with evaluation_label_tensor, then it's True
   accuracy = (prediction == evaluation_label_tensor.item())
-
-
   return accuracy
-
+    
+#Iterate over folder
 folder = 'txt/test'
 total_acc = 0
 for item in os.listdir(folder):
