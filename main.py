@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from transformers import AutoModel, AutoTokenizer
 from sklearn.model_selection import KFold
+from sklearn.metrics import confusion_matrix
 from matplotlib import pyplot as plt
 
 # build SVM fake news detection and compare with PhoBERT
@@ -144,26 +145,11 @@ for fold, (train_indices, val_indices) in enumerate(kf.split(os.listdir(folder_p
     avg_val_loss = sum(val_losses) / len(val_losses)
     print(f"Avg Validation Loss for Fold {fold + 1}: {avg_val_loss}")
 
-# Save model checkpoint at the end (approx. 1.5GB)
-'''checkpoint_path = "final_model_checkpoint.pt"
-torch.save({
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'avg_val_loss': avg_val_loss,
-    'train_losses': losses
-}, checkpoint_path)
-print(f"Final model checkpoint saved at {checkpoint_path}")'''
 
 # Plot the losses if needed 
 '''plt.plot(losses, label='training_loss')
 plt.legend()
 plt.show()''' 
-
-
-# Define a single evaluation text and its label
-# Load model checkpoint
-'''checkpoint = torch.load(checkpoint_path)
-model.load_state_dict(checkpoint['model_state_dict'])'''
 
 #Set model to evaluation state
 model.eval()
@@ -191,9 +177,9 @@ def evaluate(dir):
 
   # Compute accuracy: if prediction aligns with evaluation_label_tensor, then it's True
   accuracy = (prediction == evaluation_label_tensor.item())
-  return accuracy
+  return accuracy, prediction, evaluation_label
     
-#Iterate over folder
+#Iterate over folder and generate confusion matrix
 folder = 'txt/test'
 total_acc = 0
 for item in os.listdir(folder):
@@ -203,4 +189,6 @@ for item in os.listdir(folder):
     total_acc += 1
   print(acc)
 percent = total_acc/len(os.listdir(folder))
+confusion_matrix = confusion_matrix(all_labels, all_predictions)
 print(percent)
+print(confusion_matrix)
