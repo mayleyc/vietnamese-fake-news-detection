@@ -65,7 +65,7 @@ losses = []
 
 # Define number of folds for cross-validation
 num_folds = 10
-kf = KFold(n_splits=num_folds, shuffle=True)
+kf = KFold(n_splits=num_folds, shuffle=True, random_state=1337)
 
 # Training loop with k-fold cross-validation
 for fold, (train_indices, val_indices) in enumerate(kf.split(os.listdir(folder_path))):
